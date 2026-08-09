@@ -9,7 +9,7 @@
 #include "glm-like-lib/vectors.hpp"
 #include "engine/object.hpp"
 
-void moveCamera(GLFWwindow* window, gll::Vec3& cameraPos, float deltaTime, float speed = 3.0f) {
+void moveCamera(GLFWwindow* window, gll::Vec3& cameraPos, gll::Gfloat deltaTime, gll::Gfloat speed = 3.0f) {
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) cameraPos.y += speed * deltaTime;
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) cameraPos.y -= speed * deltaTime;
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) cameraPos.x += speed * deltaTime;
@@ -128,7 +128,7 @@ int main() {
     }
 
     gll::Vec3 cameraPos = {0, 0, -13};
-    float lastTime = glfwGetTime();
+    gll::Gfloat lastTime = glfwGetTime();
 
     egn::Light sun;
     sun.direction = gll::Vec3(0.0f, 5.0f, -3.0f);
@@ -139,19 +139,19 @@ int main() {
 
     egn::Texture check = egn::Texture::loadFromFile("../texture.png");
     gll::Vec3 cameraFront = {0, 0, 1};
-    float angle = 0.0f;
+    gll::Gfloat angle = 0.0f;
     int fps = 0;
     int lastSec = 0;
     while (!glfwWindowShouldClose(window)) {
-        float curTime = glfwGetTime();
-        float deltaTime = curTime - lastTime;
+        gll::Gfloat curTime = glfwGetTime();
+        gll::Gfloat deltaTime = curTime - lastTime;
         moveCamera(window, cameraPos, deltaTime);
         glfwPollEvents();
         fb.clear(0xFF000000);
 
         gll::Mat4 model = gll::rotate(gll::Mat4::identity(), angle, {0, 1, 1});
         gll::Mat4 view = gll::lookAt(cameraPos, cameraPos + cameraFront, {0, 1, 0});
-        gll::Mat4 proj = gll::perspective(3.14159f / 4.0f, float(WIDTH / HEIGHT), 0.1f, 100.0f);
+        gll::Mat4 proj = gll::perspective(3.14159f / 4.0f, gll::Gfloat(WIDTH / HEIGHT), 0.1f, 100.0f);
 
         egn::drawMesh(cube, model, view, proj, fb, &check, &sun);
 

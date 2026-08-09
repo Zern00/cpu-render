@@ -1,12 +1,13 @@
 #pragma once
 #include <cmath>
 #include <stdexcept>
+#include "Gfloat.hpp"
 
 namespace gll {
     struct Vec2 {
-        float x = 0.0f, y = 0.0f;
+        Gfloat x = 0.0f, y = 0.0f;
 
-        constexpr Vec2(float x_, float y_) noexcept : x(x_), y(y_) {}
+        constexpr Vec2(Gfloat x_, Gfloat y_) noexcept : x(x_), y(y_) {}
         constexpr Vec2() = default;
 
         constexpr Vec2 operator-() const noexcept {
@@ -24,13 +25,13 @@ namespace gll {
             return *this;
         }
 
-        constexpr Vec2& operator*=(float scal) noexcept {
+        constexpr Vec2& operator*=(Gfloat scal) noexcept {
             x *= scal;
             y *= scal;
             return *this;
         }
 
-        constexpr Vec2& operator/=(float scal) noexcept {
+        constexpr Vec2& operator/=(Gfloat scal) noexcept {
             x /= scal;
             y /= scal;
             return *this;
@@ -46,16 +47,16 @@ namespace gll {
             return left;
         }
 
-        friend constexpr Vec2 operator*(Vec2 vec, float scal) noexcept {
+        friend constexpr Vec2 operator*(Vec2 vec, Gfloat scal) noexcept {
             vec *= scal;
             return vec;
         }
 
-        friend constexpr Vec2 operator*(float scal, Vec2 vec) noexcept {
+        friend constexpr Vec2 operator*(Gfloat scal, Vec2 vec) noexcept {
             return vec * scal;
         }
 
-        friend constexpr Vec2 operator/(Vec2 vec, float scal) noexcept {
+        friend constexpr Vec2 operator/(Vec2 vec, Gfloat scal) noexcept {
             vec /= scal;
             return vec;
         }
@@ -68,40 +69,25 @@ namespace gll {
             return !(*this == other);
         }
 
-        friend constexpr float dot_product(const Vec2& left, const Vec2& right) noexcept {
+        friend constexpr Gfloat dot_product(const Vec2& left, const Vec2& right) noexcept {
             return (left.x * right.x) + (left.y * right.y);
         }
 
-        constexpr float lengthSquared() const noexcept {
+        constexpr Gfloat lengthSquared() const noexcept {
             return dot_product(*this, *this);
         }
 
-        float length() const noexcept {
-            return std::sqrt(lengthSquared());
-        }
+        Gfloat length() const noexcept;
 
-        void normalize() {
-            float lgh = this->length();
-            if (lgh == 0.0f) {
-                throw std::runtime_error("Cannot normalize vec2 with zero length");
-            }
-            x /= lgh;
-            y /= lgh;
-        }
+        void normalize();
 
-        Vec2 normalized() const {
-            float lgh = this->length();
-            if (lgh == 0.0) { 
-                throw std::runtime_error("Cannot return normalized vec2 with zero length"); 
-            }
-            return {x / lgh, y / lgh};
-        }
+        Vec2 normalized() const;
     };
     
     struct Vec3 {
-        float x = 0.0f, y = 0.0f, z = 0.0f;
+        Gfloat x = 0.0f, y = 0.0f, z = 0.0f;
 
-        constexpr Vec3(float x_, float y_, float z_) noexcept : x(x_), y(y_), z(z_) {}
+        constexpr Vec3(Gfloat x_, Gfloat y_, Gfloat z_) noexcept : x(x_), y(y_), z(z_) {}
         constexpr Vec3() = default;
 
         constexpr Vec3 operator-() const noexcept {
@@ -120,14 +106,14 @@ namespace gll {
             return *this;
         }
 
-        constexpr Vec3& operator*=(float scal) noexcept {
+        constexpr Vec3& operator*=(Gfloat scal) noexcept {
             x *= scal;
             y *= scal;
             z *= scal;
             return *this;
         }
 
-        constexpr Vec3& operator/=(float scal) noexcept {
+        constexpr Vec3& operator/=(Gfloat scal) noexcept {
             x /= scal;
             y /= scal;
             z /= scal;
@@ -144,16 +130,16 @@ namespace gll {
             return left;
         }
 
-        constexpr friend Vec3 operator*(Vec3 vec, float scal) noexcept {
+        constexpr friend Vec3 operator*(Vec3 vec, Gfloat scal) noexcept {
             vec *= scal;
             return vec;
         }
 
-        constexpr friend Vec3 operator*(float scal, Vec3 vec) noexcept {
+        constexpr friend Vec3 operator*(Gfloat scal, Vec3 vec) noexcept {
             return vec * scal;
         }
 
-        friend constexpr Vec3 operator/(Vec3 vec, float scal) noexcept {
+        friend constexpr Vec3 operator/(Vec3 vec, Gfloat scal) noexcept {
             vec /= scal;
             return vec;
         }
@@ -166,35 +152,19 @@ namespace gll {
             return !(*this == other);
         }
 
-        friend constexpr float dot_product(const Vec3& left, const Vec3& right) noexcept {
+        friend constexpr Gfloat dot_product(const Vec3& left, const Vec3& right) noexcept {
             return (left.x * right.x) + (left.y * right.y) + (left.z * right.z);
         }
 
-        constexpr float lengthSquared() const noexcept {
+        constexpr Gfloat lengthSquared() const noexcept {
             return dot_product(*this, *this);
         }
 
-        float length() const noexcept {
-            return std::sqrt(lengthSquared());
-        }
+        Gfloat length() const noexcept;
 
-        void normalize() {
-            float lgh = this->length();
-            if (lgh == 0.0f) {
-                throw std::runtime_error("Cannot normalize vec3 with zero length");
-            }
-            x /= lgh;
-            y /= lgh;
-            z /= lgh;
-        }
+        void normalize();
 
-        Vec3 normalized() const {
-            float lgh = this->length();
-            if (lgh == 0.0) { 
-                throw std::runtime_error("Cannot return normalized vec3 with zero length"); 
-            }
-            return {x / lgh, y / lgh, z / lgh};
-        }
+        Vec3 normalized() const;
 
         friend constexpr Vec3 cross_product(const Vec3& left, const Vec3& right) noexcept {
             return {
@@ -211,9 +181,9 @@ namespace gll {
     };
 
     struct Vec4 {
-        float x = 0.0f, y = 0.0f, z = 0.0f, w = 0.0f;
+        Gfloat x = 0.0f, y = 0.0f, z = 0.0f, w = 0.0f;
 
-        constexpr Vec4(float x_, float y_, float z_, float w_) noexcept : x(x_), y(y_), z(z_), w(w_) {}
+        constexpr Vec4(Gfloat x_, Gfloat y_, Gfloat z_, Gfloat w_) noexcept : x(x_), y(y_), z(z_), w(w_) {}
         constexpr Vec4() = default;
 
         constexpr Vec4 operator-() const noexcept {
@@ -233,7 +203,7 @@ namespace gll {
             return *this;
         }
 
-        constexpr Vec4& operator*=(float scal) noexcept {
+        constexpr Vec4& operator*=(Gfloat scal) noexcept {
             x *= scal;
             y *= scal;
             z *= scal;
@@ -241,7 +211,7 @@ namespace gll {
             return *this;
         }
 
-        constexpr Vec4& operator/=(float scal) noexcept {
+        constexpr Vec4& operator/=(Gfloat scal) noexcept {
             x /= scal;
             y /= scal;
             z /= scal;
@@ -259,16 +229,16 @@ namespace gll {
             return left;
         }
 
-        friend constexpr Vec4 operator*(Vec4 vec, float scal) noexcept {
+        friend constexpr Vec4 operator*(Vec4 vec, Gfloat scal) noexcept {
             vec *= scal;
             return vec;
         }
 
-        friend constexpr Vec4 operator*(float scal, Vec4 vec) noexcept {
+        friend constexpr Vec4 operator*(Gfloat scal, Vec4 vec) noexcept {
             return vec * scal;
         }
 
-        friend constexpr Vec4 operator/(Vec4 vec, float scal) noexcept {
+        friend constexpr Vec4 operator/(Vec4 vec, Gfloat scal) noexcept {
             vec /= scal;
             return vec;
         }
@@ -281,45 +251,23 @@ namespace gll {
             return !(*this == other);
         }
 
-        friend constexpr float dot_product(const Vec4& left, const Vec4& right) noexcept {
+        friend constexpr Gfloat dot_product(const Vec4& left, const Vec4& right) noexcept {
             return (left.x * right.x) + (left.y * right.y) + (left.z * right.z) + (left.w * right.w);
         }
 
-        constexpr float lengthSquared() const noexcept {
+        constexpr Gfloat lengthSquared() const noexcept {
             return dot_product(*this, *this);
         }
 
-        float length() const noexcept {
-            return std::sqrt(lengthSquared());
-        }
+        Gfloat length() const noexcept;
 
-        void normalize() {
-            float lgh = this->length();
-            if (lgh == 0.0f) {
-                throw std::runtime_error("Cannot normalize vec4 with zero length");
-            }
-            x /= lgh;
-            y /= lgh;
-            z /= lgh;
-            w /= lgh;
-        }
+        void normalize();
 
-        Vec4 normalized() const {
-            float lgh = this->length();
-            if (lgh == 0.0) { 
-                throw std::runtime_error("Cannot return normalized vec4 with zero length"); 
-            }
-            return {x / lgh, y / lgh, z / lgh, w / lgh};
-        }
+        Vec4 normalized() const;
 
-        Vec3 toVec3() const {
-            if (w == 0.0f) {
-                throw std::runtime_error("Cannot convert Vec4 to Vec3: w is 0");
-            }
-            return {x / w, y / w, z / w};
-        }
+        Vec3 toVec3() const;
 
-        static constexpr Vec4 toVec4(const Vec3& vec, float scal) noexcept {
+        static constexpr Vec4 toVec4(const Vec3& vec, Gfloat scal) noexcept {
             return {vec.x, vec.y, vec.z, scal};
         }
     };
