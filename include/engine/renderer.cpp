@@ -21,15 +21,20 @@ namespace egn {
             gll::Vec4 view1 = mv * gll::Vec4(v1.pos.x, v1.pos.y, v1.pos.z, 1.0f);
             gll::Vec4 view2 = mv * gll::Vec4(v2.pos.x, v2.pos.y, v2.pos.z, 1.0f);
 
-            gll::Vec4 norm0 = mv * gll::Vec4(v0.normal.x, v0.normal.y, v0.normal.z, 0.0f);
-            gll::Vec4 norm1 = mv * gll::Vec4(v1.normal.x, v1.normal.y, v1.normal.z, 0.0f);
-            gll::Vec4 norm2 = mv * gll::Vec4(v2.normal.x, v2.normal.y, v2.normal.z, 0.0f);
+            gll::Mat4 normal_mv = mv.inverse().transposed();
+            gll::Vec4 norm0 = normal_mv * gll::Vec4(v0.normal.x, v0.normal.y, v0.normal.z, 0.0f);
+            gll::Vec4 norm1 = normal_mv * gll::Vec4(v1.normal.x, v1.normal.y, v1.normal.z, 0.0f);
+            gll::Vec4 norm2 = normal_mv * gll::Vec4(v2.normal.x, v2.normal.y, v2.normal.z, 0.0f);
+
+            norm0.normalize();
+            norm1.normalize();
+            norm2.normalize();
 
             gll::Vec4 clip0 = mvp * gll::Vec4(v0.pos.x, v0.pos.y, v0.pos.z, 1.0f);
             gll::Vec4 clip1 = mvp * gll::Vec4(v1.pos.x, v1.pos.y, v1.pos.z, 1.0f);
             gll::Vec4 clip2 = mvp * gll::Vec4(v2.pos.x, v2.pos.y, v2.pos.z, 1.0f);
 
-            if (clip0.w <= 0 || clip1.w <= 0 || clip2.w <= 0) {
+            if (clip0.w <= gll::Gfloat::EPSILON || clip1.w <= gll::Gfloat::EPSILON || clip2.w <= gll::Gfloat::EPSILON) {
                 continue;;
             }
 

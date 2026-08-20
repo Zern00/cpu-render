@@ -3,19 +3,41 @@
 #include <glad/glad.h> 
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <cmath>
 #include "engine/framebuffer.hpp"
 #include "engine/rasterizer.hpp"
 #include "engine/renderer.hpp"
 #include "glm-like-lib/vectors.hpp"
 #include "engine/object.hpp"
 
-void moveCamera(GLFWwindow* window, gll::Vec3& cameraPos, gll::Gfloat deltaTime, gll::Gfloat speed = 3.0f) {
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) cameraPos.y += speed * deltaTime;
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) cameraPos.y -= speed * deltaTime;
-    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) cameraPos.x += speed * deltaTime;
-    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) cameraPos.x -= speed * deltaTime;
-    if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) cameraPos.z += speed * deltaTime;
-    if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) cameraPos.z -= speed * deltaTime;
+struct Camera{
+    gll::Vec3 pos;
+    //use gll::Vec3 frontDef{-1, 0, 0}; for correct front(its tmp mb)
+    gll::Gfloat pitch = 0.0f;
+    gll::Gfloat yaw = 0.0f;
+
+    gll::Vec3 cameraFront() {
+        return gll::Vec3{std::cos(pitch) * std::cos(yaw),
+                std::cos(pitch) * std::sin(yaw),
+                std::sin(pitch)
+        }.normalized();
+    }
+};
+
+void moveCamera(GLFWwindow* window, Camera& camera, gll::Gfloat deltaTime, gll::Gfloat speed = 3.0f) {
+    gll::Gfloat rot_speed = speed / 2;
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) camera.pos.z += speed * deltaTime;
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) camera.pos.z -= speed * deltaTime;
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) camera.pos.y -= speed * deltaTime;
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) camera.pos.y += speed * deltaTime;
+    if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) camera.pos.x -= speed * deltaTime;
+    if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) camera.pos.x += speed * deltaTime;
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) camera.pitch += rot_speed * deltaTime;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) camera.pitch -= rot_speed * deltaTime;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) camera.yaw += rot_speed * deltaTime;
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) camera.yaw -= rot_speed * deltaTime;
+
 }
 
 const int WIDTH = 1000, HEIGHT = 1000;
@@ -116,42 +138,41 @@ int main() {
 
     egn::Framebuffer fb(WIDTH, HEIGHT);
 
-    obj::OBJfile obj = obj::ParceObj("../cow.obj");
+    obj::OBJfile obj = obj::ParceObj("../cube.obj");
 
     egn::Mesh cube = obj::ConvertOBJfileToMesh(obj);
     
-    for (size_t i = 0; i < cube.vertices.size(); ++i) {
-        egn::Vertex now = cube.vertices[i];
-        std::cerr << now.pos.x << " " << now.pos.y << " " << now.pos.z << " / "
-                  << now.normal.x << " " << now.normal.y << " " << now.normal.z << " / "
-                  << now.uv.x << " " << now.uv.y << " / " << now.color << std::endl;
-    }
-
-    gll::Vec3 cameraPos = {0, 0, -13};
+    //gll::Vec3 cameraPos = {4, 0, 0};
     gll::Gfloat lastTime = glfwGetTime();
 
     egn::Light sun;
-    sun.direction = gll::Vec3(0.0f, 5.0f, -3.0f);
+    sun.direction = gll::Vec3(0.0f, 0.0f, 1.0f);
     sun.ambient   = 0.2f;
     sun.diffuse   = 0.7f;
     sun.specular  = 0.3f;
     sun.shininess = 32.0f;
 
     egn::Texture check = egn::Texture::loadFromFile("../texture.png");
-    gll::Vec3 cameraFront = {0, 0, 1};
-    gll::Gfloat angle = 0.0f;
+    //gll::Vec3 cameraFront = {-1, 0, 0};
+    gll::Gfloat angle = -20.0f;
     int fps = 0;
     int lastSec = 0;
+
+    Camera camera;
+    camera.pos = gll::Vec3(4, 0, 0);
+    camera.yaw = M_PI;
+
     while (!glfwWindowShouldClose(window)) {
         gll::Gfloat curTime = glfwGetTime();
         gll::Gfloat deltaTime = curTime - lastTime;
-        moveCamera(window, cameraPos, deltaTime);
         glfwPollEvents();
+        moveCamera(window, camera, deltaTime);
         fb.clear(0xFF000000);
 
-        gll::Mat4 model = gll::rotate(gll::Mat4::identity(), angle, {0, 1, 1});
-        gll::Mat4 view = gll::lookAt(cameraPos, cameraPos + cameraFront, {0, 1, 0});
-        gll::Mat4 proj = gll::perspective(3.14159f / 4.0f, gll::Gfloat(WIDTH / HEIGHT), 0.1f, 100.0f);
+        gll::Mat4 S = gll::scale(gll::Mat4::identity(), {1, 1.3, 0.5});
+        gll::Mat4 model = gll::rotate(S, angle, {1, 1, 0});
+        gll::Mat4 view = gll::lookAt(camera.pos, camera.pos + camera.cameraFront(), {0, 0, 1});
+        gll::Mat4 proj = gll::perspective(3.14159f / 4.0f, gll::Gfloat(static_cast<gll::Gfloat>(WIDTH) / HEIGHT), 0.1f, 100.0f);
 
         egn::drawMesh(cube, model, view, proj, fb, &check, &sun);
 
@@ -161,7 +182,7 @@ int main() {
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
-        angle += 3.0f * deltaTime;
+        angle += 0.5f * deltaTime;
         lastTime = curTime;
         glfwSwapBuffers(window);
         ++fps;

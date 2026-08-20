@@ -58,12 +58,12 @@ TEST(Mat4Tests, DoubleTransposeReturnsOriginalMatrix) {
 }
 
 TEST(Mat4Tests, InverseProducesIdentity) {
-    const gll::Mat4 matrix(2, 0, 0, 0,
-                           0, 3, 0, 0,
-                           0, 0, 4, 0,
-                           0, 0, 0, 5);
+    const gll::Mat4 matrix(2, -1,  3,  4,
+                           0,  5,  2, -2,
+                           1,  3, -1,  0,
+                           4,  2,  1,  3);
 
-    EXPECT_EQ(matrix.determinant(), 120);
+    EXPECT_EQ(matrix.determinant(), 93.0f);
     EXPECT_EQ(matrix * matrix.inverse(), gll::Mat4::identity());
     EXPECT_EQ(matrix.inverse() * matrix, gll::Mat4::identity());
 }

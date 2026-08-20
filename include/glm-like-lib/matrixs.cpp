@@ -47,7 +47,7 @@ namespace gll {
         Mat4 res;
         for (int i = 0; i < 4; ++i) {
             for (int j = 0; j < 4; ++j) {
-                Gfloat cf = ((i + j) % 2 == 0 ? 1.0f : -1.0f) * minorDet3(j, i);
+                Gfloat cf = ((i + j) % 2 == 0 ? 1.0f : -1.0f) * minorDet3(i, j);
                 res[i][j] = cf * invDet;
             }
         }
