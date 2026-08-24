@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <algorithm>
 #include <filesystem>
-#include "glm-like-lib/Gfloat.hpp"
+#include "glm-like-lib/gfloat.hpp"
 
 namespace egn {
     class Texture {

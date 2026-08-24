@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <cstdint>
-#include "glm-like-lib/Gfloat.hpp"
+#include "glm-like-lib/gfloat.hpp"
 
 namespace egn {
     class Framebuffer {

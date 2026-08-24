@@ -1,7 +1,7 @@
 #pragma once
 #include <cstddef>
-#include"vectors.hpp"
-#include <glm-like-lib/Gfloat.hpp>
+#include "vectors.hpp"
+#include <glm-like-lib/gfloat.hpp>
 
 namespace gll {
     struct Mat3 {

@@ -9,35 +9,55 @@
 #include "engine/renderer.hpp"
 #include "glm-like-lib/vectors.hpp"
 #include "engine/object.hpp"
+#include <glm-like-lib/quaternion.hpp>
 
-struct Camera{
+struct Transform {
     gll::Vec3 pos;
-    //use gll::Vec3 frontDef{-1, 0, 0}; for correct front(its tmp mb)
-    gll::Gfloat pitch = 0.0f;
-    gll::Gfloat yaw = 0.0f;
+    gll::Quaternion rotation;
+};
 
-    gll::Vec3 cameraFront() {
-        return gll::Vec3{std::cos(pitch) * std::cos(yaw),
-                std::cos(pitch) * std::sin(yaw),
-                std::sin(pitch)
-        }.normalized();
+struct Camera {
+    gll::Vec3 defaultFront = {-1, 0, 0};
+    gll::Vec3 defaultRight = {0, 1, 0};
+    gll::Vec3 defaultUp = {0, 0, 1};
+    Transform trans;
+
+    gll::Vec3 GetFront() const {
+        return trans.rotation.rotate(defaultFront);
+    }
+
+    gll::Vec3 GetUp() const {
+        return trans.rotation.rotate(defaultUp);
+    }
+
+    gll::Vec3 GetRight() const {
+        return trans.rotation.rotate(defaultRight);
     }
 };
 
 void moveCamera(GLFWwindow* window, Camera& camera, gll::Gfloat deltaTime, gll::Gfloat speed = 3.0f) {
     gll::Gfloat rot_speed = speed / 2;
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) camera.pos.z += speed * deltaTime;
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) camera.pos.z -= speed * deltaTime;
-    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) camera.pos.y -= speed * deltaTime;
-    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) camera.pos.y += speed * deltaTime;
-    if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) camera.pos.x -= speed * deltaTime;
-    if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) camera.pos.x += speed * deltaTime;
+    Transform& T = camera.trans;
 
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) camera.pitch += rot_speed * deltaTime;
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) camera.pitch -= rot_speed * deltaTime;
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) camera.yaw += rot_speed * deltaTime;
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) camera.yaw -= rot_speed * deltaTime;
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) T.pos += camera.GetUp() * speed * deltaTime;
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) T.pos -= camera.GetUp() * speed * deltaTime;
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) T.pos -= camera.GetRight() * speed * deltaTime;
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) T.pos += camera.GetRight() * speed * deltaTime;
+    if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) T.pos += camera.GetFront() * speed * deltaTime;
+    if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) T.pos -= camera.GetFront() * speed * deltaTime;
 
+    gll::Quaternion pitch(rot_speed * deltaTime, {0, 1, 0});
+    gll::Quaternion yaw(rot_speed * deltaTime, {0, 0, 1});
+    gll::Quaternion roll(rot_speed * deltaTime, {-1, 0, 0});
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) T.rotation = T.rotation * pitch;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) T.rotation = T.rotation * (pitch.inversed());
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) T.rotation = T.rotation * yaw;
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) T.rotation = T.rotation * (yaw.inversed());
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) T.rotation = T.rotation * roll;
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) T.rotation = T.rotation * (roll.inversed());
+
+    T.rotation.normalize();
 }
 
 const int WIDTH = 1000, HEIGHT = 1000;
@@ -159,8 +179,7 @@ int main() {
     int lastSec = 0;
 
     Camera camera;
-    camera.pos = gll::Vec3(4, 0, 0);
-    camera.yaw = M_PI;
+    camera.trans.pos = gll::Vec3(4, 0, 0);
 
     while (!glfwWindowShouldClose(window)) {
         gll::Gfloat curTime = glfwGetTime();
@@ -171,7 +190,7 @@ int main() {
 
         gll::Mat4 S = gll::scale(gll::Mat4::identity(), {1, 1.3, 0.5});
         gll::Mat4 model = gll::rotate(S, angle, {1, 1, 0});
-        gll::Mat4 view = gll::lookAt(camera.pos, camera.pos + camera.cameraFront(), {0, 0, 1});
+        gll::Mat4 view = gll::lookAt(camera.trans.pos, camera.trans.pos + camera.GetFront(), camera.GetUp());
         gll::Mat4 proj = gll::perspective(3.14159f / 4.0f, gll::Gfloat(static_cast<gll::Gfloat>(WIDTH) / HEIGHT), 0.1f, 100.0f);
 
         egn::drawMesh(cube, model, view, proj, fb, &check, &sun);

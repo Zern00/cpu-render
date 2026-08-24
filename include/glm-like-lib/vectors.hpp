@@ -1,7 +1,7 @@
 #pragma once
 #include <cmath>
 #include <stdexcept>
-#include "Gfloat.hpp"
+#include "gfloat.hpp"
 
 namespace gll {
     struct Vec2 {
