@@ -63,7 +63,7 @@ namespace egn {
         u = std::clamp(u, gll::Gfloat(0.0f), gll::Gfloat(1.0f));
         v = std::clamp(v, gll::Gfloat(0.0f), gll::Gfloat(1.0f));
         int x = static_cast<int>(u * (width_ - 1));
-        int y = static_cast<int>(v * (height_ - 1));
+        int y = static_cast<int>((1.0f - v) * (height_ - 1));
         return data_[y * width_ + x];
     }
 }

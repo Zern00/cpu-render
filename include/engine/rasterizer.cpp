@@ -47,13 +47,13 @@ namespace egn {
                             texColor = tex->sample(u, v);
                         }
 
-                        uint8_t b0 = (v0.color >> 16) & 0xFF, g0 = (v0.color >> 8) & 0xFF, r0 = v0.color & 0xFF;
-                        uint8_t b1 = (v1.color >> 16) & 0xFF, g1 = (v1.color >> 8) & 0xFF, r1 = v1.color & 0xFF;
-                        uint8_t b2 = (v2.color >> 16) & 0xFF, g2 = (v2.color >> 8) & 0xFF, r2 = v2.color & 0xFF;
+                        gll::Gfloat r0 = v0.color.x; gll::Gfloat g0 = v0.color.y; gll::Gfloat b0 = v0.color.z;
+                        gll::Gfloat r1 = v1.color.x; gll::Gfloat g1 = v1.color.y; gll::Gfloat b1 = v1.color.z;
+                        gll::Gfloat r2 = v2.color.x; gll::Gfloat g2 = v2.color.y; gll::Gfloat b2 = v2.color.z;
 
-                        uint8_t r = static_cast<uint8_t>((alpha * r0 + beta * r1 + gamma * r2) / invW);
-                        uint8_t g = static_cast<uint8_t>((alpha * g0 + beta * g1 + gamma * g2) / invW);
-                        uint8_t b = static_cast<uint8_t>((alpha * b0 + beta * b1 + gamma * b2) / invW);
+                        gll::Gfloat r = (alpha * r0 + beta * r1 + gamma * r2) / invW;
+                        gll::Gfloat g = (alpha * g0 + beta * g1 + gamma * g2) / invW;
+                        gll::Gfloat b = (alpha * b0 + beta * b1 + gamma * b2) / invW;
 
                         uint8_t bTex = (texColor >> 16) & 0xFF;
                         uint8_t gTex = (texColor >> 8) & 0xFF;

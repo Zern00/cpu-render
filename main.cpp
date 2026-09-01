@@ -166,8 +166,8 @@ int main() {
     gll::Gfloat lastTime = glfwGetTime();
 
     egn::Light sun;
-    sun.direction = gll::Vec3(0.0f, 0.0f, 1.0f);
-    sun.ambient   = 0.2f;
+    sun.direction = gll::Vec3(1.0f, 1.0f, 1.0f);
+    sun.ambient   = 0.4f;
     sun.diffuse   = 0.7f;
     sun.specular  = 0.3f;
     sun.shininess = 32.0f;
@@ -201,7 +201,7 @@ int main() {
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
-        angle += 0.5f * deltaTime;
+        angle += 2.0f * deltaTime;
         lastTime = curTime;
         glfwSwapBuffers(window);
         ++fps;

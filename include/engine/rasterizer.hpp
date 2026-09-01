@@ -10,7 +10,7 @@ namespace egn {
         gll::Vec3 normal;
         gll::Vec2 uv;
         gll::Gfloat invW;
-        uint32_t color;
+        gll::Vec4 color;
     };
 
     struct Light {
