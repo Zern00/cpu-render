@@ -4,20 +4,26 @@
 
 namespace egn {
     void drawTriangle(const egn::ShadedVertex& v0, const egn::ShadedVertex& v1, const egn::ShadedVertex& v2, 
+                      uint32_t startRow, uint32_t endRow,
                       Framebuffer& fb, const Texture* tex, const Light* light) {
         //AABB
-        float minX = std::max(0.0f, std::floor(std::min(v0.screenPos.x, std::min(v1.screenPos.x, v2.screenPos.x))));
-        float maxX = std::min(static_cast<float>(fb.width() - 1), std::ceil(std::max(v0.screenPos.x, std::max(v1.screenPos.x, v2.screenPos.x))));
-        float minY = std::max(0.0f, std::floor(std::min(v0.screenPos.y, std::min(v1.screenPos.y, v2.screenPos.y))));
-        float maxY = std::min(static_cast<float>(fb.height() - 1), std::ceil(std::max(v0.screenPos.y, std::max(v1.screenPos.y, v2.screenPos.y))));
+        float minXPolygon = std::max(0.0f, std::floor(std::min(v0.screenPos.x, std::min(v1.screenPos.x, v2.screenPos.x))));
+        float maxXPolygon = std::min(static_cast<float>(fb.width() - 1), std::ceil(std::max(v0.screenPos.x, std::max(v1.screenPos.x, v2.screenPos.x))));
+        float minYPolygon = std::max(0.0f, std::floor(std::min(v0.screenPos.y, std::min(v1.screenPos.y, v2.screenPos.y))));
+        float maxYPolygon = std::min(static_cast<float>(fb.height() - 1), std::ceil(std::max(v0.screenPos.y, std::max(v1.screenPos.y, v2.screenPos.y))));
 
         gll::Gfloat area = (v1.screenPos.x - v0.screenPos.x) * (v2.screenPos.y - v0.screenPos.y) - (v1.screenPos.y - v0.screenPos.y) * (v2.screenPos.x - v0.screenPos.x);
         if (area >= 0.0f) return;
 
         gll::Gfloat invArea = 1 / area;
 
-        for (int y = minY; y <= maxY; ++y) {
-            for (int x = minX; x <= maxX; ++x) {
+        startRow = std::max(startRow, static_cast<uint32_t>(minYPolygon));
+        endRow = std::min(endRow, static_cast<uint32_t>(maxYPolygon));
+                        
+        if (startRow > endRow) return;
+
+        for (int y = startRow; y <= endRow; ++y) {
+            for (int x = minXPolygon; x <= maxXPolygon; ++x) {
                 gll::Gfloat px = x + 0.5f;
                 gll::Gfloat py = y + 0.5f;
 

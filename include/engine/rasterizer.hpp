@@ -22,5 +22,6 @@ namespace egn {
     };
     
     void drawTriangle(const egn::ShadedVertex& v0, const egn::ShadedVertex& v1, const egn::ShadedVertex& v2,
+                      uint32_t startRow, uint32_t endRow,
                       Framebuffer& fb, const Texture* tex = nullptr, const Light* light = nullptr);
 }

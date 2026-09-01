@@ -1,4 +1,5 @@
 #include "renderer.hpp"
+#include <thread>
 
 namespace egn {
     gll::Vec4 unpackColor(uint32_t color) {
@@ -95,6 +96,8 @@ namespace egn {
         }
         
         gll::Mat4 normal_mv = mv.inverse().transposed();
+        std::vector<std::vector<ClipVertex>> prepared_polygons;
+
         for (int i = 0; i < mesh.indices.size(); i += 3) {
             const Vertex& v0 = mesh.vertices[mesh.indices[i]];
             const Vertex& v1 = mesh.vertices[mesh.indices[i + 1]];
@@ -144,18 +147,34 @@ namespace egn {
                 continue;
             }
 
-            Light viewLight;
-            if (light) {
-                viewLight = *light;
-                viewLight.direction = lightDirView;
-            }
+            prepared_polygons.push_back(polygon);
+        }
 
-            for (size_t j = 1; j + 1 < polygon.size(); ++j) {
-                ShadedVertex sv0 = toShadedVertex(polygon[0], fb);
-                ShadedVertex sv1 = toShadedVertex(polygon[j], fb);
-                ShadedVertex sv2 = toShadedVertex(polygon[j + 1], fb);
-                drawTriangle(sv0, sv1, sv2, fb, tex, light ? &viewLight : nullptr);
-            }
+        Light viewLight;
+        if (light) {
+            viewLight = *light;
+            viewLight.direction = lightDirView;
+        }
+
+        uint32_t workers_count = std::max(std::thread::hardware_concurrency() - 2, 1U);
+        std::vector<std::jthread> workers;
+        workers.reserve(workers_count);
+
+        for (size_t worker = 0; worker < workers_count; ++worker) {
+            uint32_t startRow = (fb.height() * worker / workers_count) + static_cast<uint32_t>(worker > 0);
+            uint32_t endRow = (fb.height() * (worker + 1) / workers_count);
+
+            workers.emplace_back([&, startRow, endRow]() {
+                for (auto& polygon : prepared_polygons) {
+                    for (size_t j = 1; j + 1 < polygon.size(); ++j) {
+                        ShadedVertex sv0 = toShadedVertex(polygon[0], fb);
+                        ShadedVertex sv1 = toShadedVertex(polygon[j], fb);
+                        ShadedVertex sv2 = toShadedVertex(polygon[j + 1], fb);
+
+                        drawTriangle(sv0, sv1, sv2, startRow, endRow, fb, tex, light ? &viewLight : nullptr);
+                    }
+                }
+            });
         }
     }
 }
