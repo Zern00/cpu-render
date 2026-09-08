@@ -1,6 +1,7 @@
 #pragma once
-#include <vector>
 #include <filesystem>
+#include <string>
+#include <vector>
 #include "glm-like-lib/vectors.hpp"
 #include "engine/mesh.hpp"
 #include "engine/framebuffer.hpp"
@@ -18,6 +19,8 @@ namespace obj {
         std::vector<gll::Vec2> uv_coord;
         std::vector<gll::Vec3> normal_coord;
         std::vector<Face> faces;
+        std::vector<std::string> face_materials;
+        std::vector<egn::Material> materials;
     };
     
     std::vector<std::string> SplitByTokens(const std::string& str);

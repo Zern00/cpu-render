@@ -2,8 +2,14 @@
 #include <algorithm>
 #include <future>
 #include <mutex>
+#include <utility>
 
 namespace egn {
+    struct PreparedPolygon {
+        std::vector<ClipVertex> vertices;
+        const Material* material;
+    };
+
     gll::Vec4 unpackColor(uint32_t color) {
         return gll::Vec4((color) & 0xFF, (color >> 8) & 0xFF, (color >> 16) & 0xFF, (color >> 24) & 0xFF);
     }
@@ -98,7 +104,8 @@ namespace egn {
         }
         
         gll::Mat4 normal_mv = mv.inverse().transposed();
-        std::vector<std::vector<ClipVertex>> prepared_polygons;
+        Material default_material;
+        std::vector<PreparedPolygon> prepared_polygons;
 
         size_t triangles_count = mesh.indices.size() / 3;
         size_t clipping_workers_count = std::min(threadpool.workersCount(), triangles_count);
@@ -115,6 +122,14 @@ namespace egn {
                     const Vertex& v0 = mesh.vertices[mesh.indices[i]];
                     const Vertex& v1 = mesh.vertices[mesh.indices[i + 1]];
                     const Vertex& v2 = mesh.vertices[mesh.indices[i + 2]];
+                    const Material* material = &default_material;
+                    size_t triangle_index = i / 3;
+                    if (triangle_index < mesh.triangle_materials.size()) {
+                        int material_index = mesh.triangle_materials[triangle_index];
+                        if (material_index >= 0 && static_cast<size_t>(material_index) < mesh.materials.size()) {
+                            material = &mesh.materials[material_index];
+                        }
+                    }
 
                     gll::Vec4 view0 = mv * gll::Vec4(v0.pos.x, v0.pos.y, v0.pos.z, 1.0f);
                     gll::Vec4 view1 = mv * gll::Vec4(v1.pos.x, v1.pos.y, v1.pos.z, 1.0f);
@@ -162,7 +177,7 @@ namespace egn {
 
                     {
                         std::lock_guard<std::mutex> lock(polygon_mutex);
-                        prepared_polygons.push_back(polygon);
+                        prepared_polygons.push_back({std::move(polygon), material});
                     }
                 }
             }));
@@ -194,13 +209,15 @@ namespace egn {
             uint32_t endRow = static_cast<uint32_t>(fb.height() * (worker + 1) / render_workers_count - 1);
 
             render_tasks.push_back(threadpool.PushTask([&, startRow, endRow]() {
-                for (auto& polygon : prepared_polygons) {
+                for (const auto& prepared_polygon : prepared_polygons) {
+                    const auto& polygon = prepared_polygon.vertices;
                     for (size_t j = 1; j + 1 < polygon.size(); ++j) {
                         ShadedVertex sv0 = toShadedVertex(polygon[0], fb);
                         ShadedVertex sv1 = toShadedVertex(polygon[j], fb);
                         ShadedVertex sv2 = toShadedVertex(polygon[j + 1], fb);
 
-                        drawTriangle(sv0, sv1, sv2, startRow, endRow, fb, tex, light ? &viewLight : nullptr);
+                        drawTriangle(sv0, sv1, sv2, startRow, endRow, fb, tex,
+                                     light ? &viewLight : nullptr, prepared_polygon.material);
                     }
                 }
             }));

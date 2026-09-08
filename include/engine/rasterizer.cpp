@@ -5,7 +5,7 @@
 namespace egn {
     void drawTriangle(const egn::ShadedVertex& v0, const egn::ShadedVertex& v1, const egn::ShadedVertex& v2, 
                       uint32_t startRow, uint32_t endRow,
-                      Framebuffer& fb, const Texture* tex, const Light* light) {
+                      Framebuffer& fb, const Texture* tex, const Light* light, const Material* material) {
         //AABB
         float minXPolygon = std::max(0.0f, std::floor(std::min(v0.screenPos.x, std::min(v1.screenPos.x, v2.screenPos.x))));
         float maxXPolygon = std::min(static_cast<float>(fb.width() - 1), std::ceil(std::max(v0.screenPos.x, std::max(v1.screenPos.x, v2.screenPos.x))));
@@ -69,7 +69,7 @@ namespace egn {
                         g = (g * gTex) / 255;
                         b = (b * bTex) / 255;
 
-                        if (light) {
+                        if (light && material) {
                             gll::Vec3 viewPos;
                             viewPos.x = (alpha * v0.viewPos.x + beta * v1.viewPos.x + gamma * v2.viewPos.x) / invW;
                             viewPos.y = (alpha * v0.viewPos.y + beta * v1.viewPos.y + gamma * v2.viewPos.y) / invW;
@@ -90,14 +90,18 @@ namespace egn {
 
                             // Specular (Blinn-Phong)
                             gll::Vec3 halfway = (lightDir + viewDir).normalized();
-                            gll::Gfloat spec = std::pow(std::max(dot_product(normal, halfway), gll::Gfloat(0.0f)), light->shininess);
+                            gll::Gfloat spec = std::pow(std::max(dot_product(normal, halfway), gll::Gfloat(0.0f)), material->shininess);
 
-                            gll::Gfloat lighting = light->ambient + light->diffuse * diff + light->specular * spec;
-                            lighting = std::min(lighting, gll::Gfloat(1.0f));
+                            gll::Gfloat lightingR = material->ambient.x + material->diffuse.x * diff + material->specular.x * spec;
+                            gll::Gfloat lightingG = material->ambient.y + material->diffuse.y * diff + material->specular.y * spec;
+                            gll::Gfloat lightingB = material->ambient.z + material->diffuse.z * diff + material->specular.z * spec;
+                            lightingR = std::clamp(lightingR, gll::Gfloat(0.0f), gll::Gfloat(1.0f));
+                            lightingG = std::clamp(lightingG, gll::Gfloat(0.0f), gll::Gfloat(1.0f));
+                            lightingB = std::clamp(lightingB, gll::Gfloat(0.0f), gll::Gfloat(1.0f));
 
-                            r *= lighting;
-                            g *= lighting;
-                            b *= lighting;
+                            r *= lightingR;
+                            g *= lightingG;
+                            b *= lightingB;
                         }
                         
                         uint32_t finalColor = Framebuffer::packColor(r, g, b);

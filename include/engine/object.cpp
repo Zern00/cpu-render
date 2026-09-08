@@ -1,7 +1,8 @@
 #include "object.hpp"
+#include <algorithm>
 #include <fstream>
-#include <sstream>
 #include <iostream>
+#include <sstream>
 
 namespace obj {
     std::vector<std::string> SplitByTokens(const std::string& str) {
@@ -14,6 +15,47 @@ namespace obj {
         return tokens;
     }
 
+    egn::Material* FindMaterial(std::vector<egn::Material>& materials, const std::string& name) {
+        auto material = std::find_if(materials.begin(), materials.end(), [&name](const egn::Material& value) {
+            return value.name == name;
+        });
+        return material == materials.end() ? nullptr : &*material;
+    }
+
+    void ParseMaterialLibrary(const std::filesystem::path& path, std::vector<egn::Material>& materials) {
+        std::ifstream file(path);
+        if (!file.is_open()) {
+            std::cerr << "Can`t open material file by path " << path.c_str() << std::endl;
+            return;
+        }
+
+        egn::Material* current_material = nullptr;
+        std::string cur_line;
+        while (std::getline(file, cur_line)) {
+            auto tokens = SplitByTokens(cur_line);
+            if (tokens.empty() || tokens[0][0] == '#') {
+                continue;
+            }
+
+            if (tokens[0] == "newmtl" && tokens.size() >= 2) {
+                current_material = FindMaterial(materials, tokens[1]);
+                if (!current_material) {
+                    materials.push_back(egn::Material{});
+                    current_material = &materials.back();
+                    current_material->name = tokens[1];
+                }
+            } else if (current_material && tokens[0] == "Ka" && tokens.size() >= 4) {
+                current_material->ambient = {std::stof(tokens[1]), std::stof(tokens[2]), std::stof(tokens[3])};
+            } else if (current_material && tokens[0] == "Kd" && tokens.size() >= 4) {
+                current_material->diffuse = {std::stof(tokens[1]), std::stof(tokens[2]), std::stof(tokens[3])};
+            } else if (current_material && tokens[0] == "Ks" && tokens.size() >= 4) {
+                current_material->specular = {std::stof(tokens[1]), std::stof(tokens[2]), std::stof(tokens[3])};
+            } else if (current_material && tokens[0] == "Ns" && tokens.size() >= 2) {
+                current_material->shininess = std::stof(tokens[1]);
+            }
+        }
+    }
+
     OBJfile ParceObj(const std::filesystem::path& path) {
         OBJfile data;
         std::ifstream file(path);
@@ -23,6 +65,7 @@ namespace obj {
         }
 
         std::string cur_line;
+        std::string current_material;
         while (std::getline(file, cur_line)) {
             auto tokens = SplitByTokens(cur_line);
              if (tokens.size() == 0) {
@@ -77,10 +120,15 @@ namespace obj {
                 }
 
                 data.faces.push_back(f);
+                data.face_materials.push_back(current_material);
             } else if (tokens[0] == "#") {
                 continue;
             } else if (tokens[0] == "mtllib") {
-                std::cerr << "mtllib dont support" << std::endl;
+                for (size_t i = 1; i < tokens.size(); ++i) {
+                    ParseMaterialLibrary(path.parent_path() / tokens[i], data.materials);
+                }
+            } else if (tokens[0] == "usemtl" && tokens.size() >= 2) {
+                current_material = tokens[1];
             } else {
                 std::cerr << "invalid token " << tokens[0] << std::endl;
             }
@@ -95,6 +143,8 @@ namespace obj {
         size_t count_vert = 0;
         mesh.vertices.reserve(obj_file.faces.size() * 3);
         mesh.indices.reserve(obj_file.faces.size() * 3);
+        mesh.materials = obj_file.materials;
+        mesh.triangle_materials.reserve(obj_file.faces.size());
 
         for (size_t i = 0; i < obj_file.faces.size(); ++i) {
             Face cur_face = obj_file.faces[i];
@@ -106,6 +156,17 @@ namespace obj {
                                            egn::Framebuffer::packColor(255, 255, 255)});
                 ++count_vert;
             }
+
+            int material_index = -1;
+            if (i < obj_file.face_materials.size()) {
+                auto material = std::find_if(mesh.materials.begin(), mesh.materials.end(), [&obj_file, i](const egn::Material& value) {
+                    return value.name == obj_file.face_materials[i];
+                });
+                if (material != mesh.materials.end()) {
+                    material_index = static_cast<int>(std::distance(mesh.materials.begin(), material));
+                }
+            }
+            mesh.triangle_materials.push_back(material_index);
         }
 
         mesh.indices.resize(count_vert);

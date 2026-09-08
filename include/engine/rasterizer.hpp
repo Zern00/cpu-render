@@ -1,6 +1,7 @@
 #pragma once
 #include "framebuffer.hpp"
 #include "glm-like-lib/vectors.hpp"
+#include "mesh.hpp"
 #include "texture.hpp"
 
 namespace egn {
@@ -15,13 +16,10 @@ namespace egn {
 
     struct Light {
         gll::Vec3 direction;
-        gll::Gfloat ambient;
-        gll::Gfloat diffuse;
-        gll::Gfloat specular;
-        gll::Gfloat shininess;
     };
     
     void drawTriangle(const egn::ShadedVertex& v0, const egn::ShadedVertex& v1, const egn::ShadedVertex& v2,
                       uint32_t startRow, uint32_t endRow,
-                      Framebuffer& fb, const Texture* tex = nullptr, const Light* light = nullptr);
+                      Framebuffer& fb, const Texture* tex = nullptr, const Light* light = nullptr,
+                      const Material* material = nullptr);
 }
