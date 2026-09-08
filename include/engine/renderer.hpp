@@ -1,4 +1,5 @@
 #pragma once
+#include "concurrency.hpp"
 #include "rasterizer.hpp"
 #include "glm-like-lib/vectors.hpp"
 #include "glm-like-lib/transform.hpp"
@@ -32,5 +33,5 @@ namespace egn {
     egn::ShadedVertex toShadedVertex(const ClipVertex& v, Framebuffer& fb);
 
     void drawMesh(const Mesh& mesh, const gll::Mat4& model, const gll::Mat4& view, const gll::Mat4& proj,
-                  Framebuffer& fb, const Texture* tex = nullptr, const Light* light = nullptr);
+                  Framebuffer& fb, Threadpool& threadpool, const Texture* tex = nullptr, const Light* light = nullptr);
 }

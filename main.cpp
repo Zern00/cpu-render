@@ -60,7 +60,7 @@ void moveCamera(GLFWwindow* window, Camera& camera, gll::Gfloat deltaTime, gll::
     T.rotation.normalize();
 }
 
-const int WIDTH = 1000, HEIGHT = 1000;
+const int WIDTH = 1920, HEIGHT = 1080;
 const char* vert = R"(
     #version 330 core
     layout (location = 0) in vec2 aPos;
@@ -157,8 +157,9 @@ int main() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     egn::Framebuffer fb(WIDTH, HEIGHT);
+    egn::Threadpool threadpool;
 
-    obj::OBJfile obj = obj::ParceObj("../cube.obj");
+    obj::OBJfile obj = obj::ParceObj("../texture.obj");
 
     egn::Mesh cube = obj::ConvertOBJfileToMesh(obj);
     
@@ -172,7 +173,7 @@ int main() {
     sun.specular  = 0.3f;
     sun.shininess = 32.0f;
 
-    egn::Texture check = egn::Texture::loadFromFile("../texture.png");
+    egn::Texture check = egn::Texture::loadFromFile("../cube.png");
     //gll::Vec3 cameraFront = {-1, 0, 0};
     gll::Gfloat angle = -20.0f;
     int fps = 0;
@@ -188,12 +189,12 @@ int main() {
         moveCamera(window, camera, deltaTime);
         fb.clear(0xFF000000);
 
-        gll::Mat4 S = gll::scale(gll::Mat4::identity(), {1, 1.3, 0.5});
-        gll::Mat4 model = gll::rotate(S, angle, {1, 1, 0});
+        gll::Mat4 S = gll::scale(gll::Mat4::identity(), {2.0f, 3.0f, 2.0f});
+        gll::Mat4 model = gll::rotate(S, angle, {0, 0, 1});
         gll::Mat4 view = gll::lookAt(camera.trans.pos, camera.trans.pos + camera.GetFront(), camera.GetUp());
         gll::Mat4 proj = gll::perspective(3.14159f / 4.0f, gll::Gfloat(static_cast<gll::Gfloat>(WIDTH) / HEIGHT), 0.1f, 100.0f);
 
-        egn::drawMesh(cube, model, view, proj, fb, &check, &sun);
+        egn::drawMesh(cube, model, view, proj, fb, threadpool, &check, &sun);
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, WIDTH, HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, fb.color());
         glClear(GL_COLOR_BUFFER_BIT);
